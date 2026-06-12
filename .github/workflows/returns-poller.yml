@@ -17,7 +17,8 @@ jobs:
           DRY_RUN: ${{ vars.RETURNS_DRY_RUN || 'true' }}
           POLL_LOOKBACK_DAYS: '30'
           SHOPIFY_SHOP: ${{ secrets.SHOPIFY_SHOP }}
-          SHOPIFY_ADMIN_TOKEN: ${{ secrets.SHOPIFY_ADMIN_TOKEN }}
+          SHOPIFY_CLIENT_ID: ${{ secrets.SHOPIFY_CLIENT_ID }}
+          SHOPIFY_CLIENT_SECRET: ${{ secrets.SHOPIFY_CLIENT_SECRET }}
           DHL_BASE: ${{ vars.DHL_BASE || 'https://api-eu.dhl.com' }}
           DHL_CLIENT_ID: ${{ secrets.DHL_RETURNS_CLIENT_ID }}
           DHL_CLIENT_SECRET: ${{ secrets.DHL_RETURNS_CLIENT_SECRET }}
