@@ -1,9 +1,16 @@
 const cfg = require('./config');
+let _tok=null,_exp=0;
+async function getToken(){
+  if(_tok && Date.now()<_exp-60000) return _tok;
+  const r=await fetch(`https://${cfg.shop}/admin/oauth/access_token`,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({grant_type:'client_credentials',client_id:cfg.clientId,client_secret:cfg.clientSecret})});
+  if(!r.ok) throw new Error(`Shopify Token ${r.status}: ${await r.text()}`);
+  const j=await r.json(); _tok=j.access_token; _exp=Date.now()+(j.expires_in||86399)*1000; return _tok;
+}
 
 async function gql(query, variables) {
   const res = await fetch(`https://${cfg.shop}/admin/api/${cfg.apiVersion}/graphql.json`, {
     method: 'POST',
-    headers: { 'X-Shopify-Access-Token': cfg.adminToken, 'Content-Type': 'application/json' },
+    headers: { 'X-Shopify-Access-Token': await getToken(), 'Content-Type': 'application/json' },
     body: JSON.stringify({ query, variables }),
   });
   const json = await res.json();

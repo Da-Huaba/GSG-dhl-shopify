@@ -1,7 +1,14 @@
 const cfg = require('./config');
+let _tok=null,_exp=0;
+async function getToken(){
+  if(_tok && Date.now()<_exp-60000) return _tok;
+  const r=await fetch(`https://${cfg.shop}/admin/oauth/access_token`,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({grant_type:'client_credentials',client_id:cfg.clientId,client_secret:cfg.clientSecret})});
+  if(!r.ok) throw new Error(`Shopify Token ${r.status}: ${await r.text()}`);
+  const j=await r.json(); _tok=j.access_token; _exp=Date.now()+(j.expires_in||86399)*1000; return _tok;
+}
 async function gql(query, variables){
   const res=await fetch(`https://${cfg.shop}/admin/api/${cfg.apiVersion}/graphql.json`,{
-    method:'POST', headers:{'X-Shopify-Access-Token':cfg.adminToken,'Content-Type':'application/json'},
+    method:'POST', headers:{'X-Shopify-Access-Token':await getToken(),'Content-Type':'application/json'},
     body:JSON.stringify({query,variables}) });
   const j=await res.json(); if(j.errors) throw new Error('Shopify GraphQL: '+JSON.stringify(j.errors)); return j.data;
 }
@@ -11,7 +18,8 @@ const PROCESSED_TAG='dhl-return-label-created';
 async function* findCandidates(){
   const since=new Date(Date.now()-cfg.lookbackDays*86400000).toISOString().slice(0,10);
   const status = cfg.mode==='AUTO' ? 'return_requested' : 'in_progress';
-  const q=`created_at:>=${since} return_status:${status} -tag:${PROCESSED_TAG}`;
+  let q=`created_at:>=${since} return_status:${status} -tag:${PROCESSED_TAG}`;
+  if(cfg.only.length) q+=' ('+cfg.only.map(n=>`name:${n}`).join(' OR ')+')';
   let cursor=null;
   do{
     const d=await gql(`
@@ -26,6 +34,7 @@ async function* findCandidates(){
               lineItems(first:50){ nodes{ id totalQuantity } } } } } }
         } } }`, { q, c:cursor });
     for(const o of d.orders.nodes){
+      if(cfg.only.length && !cfg.only.includes(o.name)) continue;
       for(const r of (o.returns?.nodes||[])){
         const rfo=(r.reverseFulfillmentOrders?.nodes||[])[0];
         if(rfo && (rfo.reverseDeliveries?.nodes||[]).length>0) continue; // schon Label vorhanden

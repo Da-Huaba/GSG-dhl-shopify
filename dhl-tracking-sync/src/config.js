@@ -3,9 +3,11 @@ function req(name) {
   if (!v) throw new Error(`Missing env var: ${name}`);
   return v;
 }
+function normShop(x){ return x.includes('.myshopify.com')?x:x+'.myshopify.com'; }
 module.exports = {
-  shop: req('SHOPIFY_SHOP'),
-  adminToken: req('SHOPIFY_ADMIN_TOKEN'),
+  shop: normShop(req('SHOPIFY_SHOP')),
+  clientId: req('SHOPIFY_CLIENT_ID'),
+  clientSecret: req('SHOPIFY_CLIENT_SECRET'),
   apiVersion: process.env.SHOPIFY_API_VERSION || '2025-07',
   dhlApiKey: req('DHL_API_KEY'),
   dhlBase: process.env.DHL_TRACKING_BASE || 'https://api-eu.dhl.com',
