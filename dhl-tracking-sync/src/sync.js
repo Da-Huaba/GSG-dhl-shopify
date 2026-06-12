@@ -42,6 +42,7 @@ async function run() {
       } catch (e) {
         errors++;
         console.error(`[ERR] ${order} ${t.number}: ${e.message}`);
+        if (e.rateLimited) { capReached = true; console.warn('[STOP] DHL-Rate-Limit erreicht – Rest beim nächsten Lauf.'); break; }
       }
     }
   }

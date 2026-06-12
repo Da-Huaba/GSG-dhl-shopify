@@ -13,6 +13,6 @@ module.exports = {
   dhlBase: process.env.DHL_TRACKING_BASE || 'https://api-eu.dhl.com',
   lookbackDays: parseInt(process.env.LOOKBACK_DAYS || '30', 10),
   dryRun: String(process.env.DRY_RUN || 'true').toLowerCase() === 'true',
-  rateDelayMs: parseInt(process.env.DHL_RATE_DELAY_MS || '350', 10),
+  rateDelayMs: parseInt(process.env.DHL_RATE_DELAY_MS || '1100', 10),
   maxCalls: parseInt(process.env.MAX_TRACK_CALLS || '240', 10),
 };
