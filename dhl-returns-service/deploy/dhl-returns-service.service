@@ -1,0 +1,11 @@
+[Unit]
+Description=DHL Returns Poller (Shopify -> DHL Returns API -> Writeback), one-shot
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/dhl-returns-service
+EnvironmentFile=/opt/dhl-returns-service/.env
+ExecStart=/usr/bin/node index.js
+User=dhlsvc

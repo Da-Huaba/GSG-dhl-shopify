@@ -1,0 +1,11 @@
+[Unit]
+Description=DHL Tracking -> Shopify Fulfillment Event Sync (one-shot)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/dhl-tracking-sync
+EnvironmentFile=/opt/dhl-tracking-sync/.env
+ExecStart=/usr/bin/node index.js
+User=dhlsync

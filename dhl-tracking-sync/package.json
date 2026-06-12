@@ -1,0 +1,11 @@
+{
+  "name": "dhl-tracking-sync",
+  "version": "1.0.0",
+  "description": "Pollt DHL Unified Tracking und schreibt Shopify Fulfillment-Events, damit der Tracking-Status im Admin live mitwandert.",
+  "type": "commonjs",
+  "engines": { "node": ">=18" },
+  "scripts": {
+    "start": "node index.js",
+    "once": "node index.js --once"
+  }
+}

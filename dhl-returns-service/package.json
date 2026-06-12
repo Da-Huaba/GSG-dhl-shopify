@@ -1,0 +1,8 @@
+{
+  "name": "dhl-returns-service",
+  "version": "0.2.0",
+  "description": "Polling-Dienst: erzeugt DHL-Rücksendeetiketten für Shopify-Retouren (Parcel DE Returns API) und schreibt Label+Tracking zurück. Outbound-only, AUTO/GATE.",
+  "type": "commonjs",
+  "engines": { "node": ">=18" },
+  "scripts": { "start": "node index.js" }
+}

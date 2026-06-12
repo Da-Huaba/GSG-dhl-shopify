@@ -1,0 +1,16 @@
+function req(name) {
+  const v = process.env[name];
+  if (!v) throw new Error(`Missing env var: ${name}`);
+  return v;
+}
+module.exports = {
+  shop: req('SHOPIFY_SHOP'),
+  adminToken: req('SHOPIFY_ADMIN_TOKEN'),
+  apiVersion: process.env.SHOPIFY_API_VERSION || '2025-07',
+  dhlApiKey: req('DHL_API_KEY'),
+  dhlBase: process.env.DHL_TRACKING_BASE || 'https://api-eu.dhl.com',
+  lookbackDays: parseInt(process.env.LOOKBACK_DAYS || '30', 10),
+  dryRun: String(process.env.DRY_RUN || 'true').toLowerCase() === 'true',
+  rateDelayMs: parseInt(process.env.DHL_RATE_DELAY_MS || '350', 10),
+  maxCalls: parseInt(process.env.MAX_TRACK_CALLS || '240', 10),
+};
