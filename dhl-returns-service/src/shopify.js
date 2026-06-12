@@ -17,8 +17,8 @@ const PROCESSED_TAG='dhl-return-label-created';
 // Kandidaten-Retouren per Polling finden (nur ausgehende Calls)
 async function* findCandidates(){
   const since=new Date(Date.now()-cfg.lookbackDays*86400000).toISOString().slice(0,10);
-  const status = cfg.mode==='AUTO' ? 'return_requested' : 'in_progress';
-  let q=`created_at:>=${since} return_status:${status} -tag:${PROCESSED_TAG}`;
+  const statusFilter = cfg.mode==='AUTO' ? '(return_status:return_requested OR return_status:in_progress)' : 'return_status:in_progress';
+  let q=`created_at:>=${since} ${statusFilter} -tag:${PROCESSED_TAG}`;
   if(cfg.only.length) q+=' ('+cfg.only.map(n=>`name:${n}`).join(' OR ')+')';
   let cursor=null;
   do{
@@ -45,6 +45,10 @@ async function* findCandidates(){
   } while(cursor);
 }
 
+async function getRfo(returnGid){
+  const d=await gql(`query($id:ID!){ return(id:$id){ reverseFulfillmentOrders(first:5){ nodes{ id reverseDeliveries(first:1){ nodes{ id } } lineItems(first:50){ nodes{ id totalQuantity } } } } } }`, { id:returnGid });
+  return (d.return?.reverseFulfillmentOrders?.nodes||[])[0];
+}
 async function approveReturn(id){
   const d=await gql(`mutation($in:ReturnApproveRequestInput!){ returnApproveRequest(input:$in){ return{ id status } userErrors{ message } } }`,
     { in:{ id, notifyCustomer:false } });
@@ -70,4 +74,4 @@ async function createReverseDelivery(rfoId, lineItems, tracking, fileUrl, notify
 async function tagProcessed(orderId){
   await gql(`mutation($id:ID!,$t:[String!]!){ tagsAdd(id:$id, tags:$t){ userErrors{ message } } }`, { id:orderId, t:[PROCESSED_TAG] });
 }
-module.exports={ findCandidates, approveReturn, uploadLabel, createReverseDelivery, tagProcessed };
+module.exports={ findCandidates, getRfo, approveReturn, uploadLabel, createReverseDelivery, tagProcessed };

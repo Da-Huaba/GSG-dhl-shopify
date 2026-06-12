@@ -29,12 +29,16 @@ async function processReturn({ order, ret, rfo }){
 
   if(cfg.dryRun){ console.log(`[DRY] ${ctx.orderName} ${ctx.returnName}: würde ${cfg.mode==='AUTO'?'genehmigen + ':''}Label erzeugen (${country}, receiverId=${ctx.receiverId}, ${ctx.shipper.street} ${ctx.shipper.house})`); return 'dry'; }
 
-  if(cfg.mode==='AUTO') await shopify.approveReturn(ret.id);
+  if(cfg.mode==='AUTO' && ret.status==='REQUESTED') await shopify.approveReturn(ret.id);
+  // Reverse-Fulfillment-Order entsteht erst mit der Genehmigung -> frisch laden (kurzer Retry)
+  let rfoFresh = await shopify.getRfo(ret.id);
+  if(!rfoFresh){ await new Promise(r=>setTimeout(r,2500)); rfoFresh = await shopify.getRfo(ret.id); }
+  if(!rfoFresh) throw new Error('keine reverseFulfillmentOrder (auch nach Genehmigung)');
+  if((rfoFresh.reverseDeliveries?.nodes||[]).length>0){ console.log(`[SKIP] ${ctx.orderName}: bereits Reverse-Delivery vorhanden`); await shopify.tagProcessed(order.id); return 'skip'; }
   const label=await dhl.createReturnOrder(ctx);
-  if(!rfo) throw new Error('keine reverseFulfillmentOrder');
-  const lineItems=(rfo.lineItems?.nodes||[]).map(li=>({ reverseFulfillmentOrderLineItemId:li.id, quantity:li.totalQuantity }));
+  const lineItems=(rfoFresh.lineItems?.nodes||[]).map(li=>({ reverseFulfillmentOrderLineItemId:li.id, quantity:li.totalQuantity }));
   const fileUrl=await shopify.uploadLabel(label.labelB64, `${ctx.returnName}.pdf`);
-  await shopify.createReverseDelivery(rfo.id, lineItems, { number:label.shipmentNo, url:label.trackingUrl }, fileUrl, true);
+  await shopify.createReverseDelivery(rfoFresh.id, lineItems, { number:label.shipmentNo, url:label.trackingUrl }, fileUrl, true);
   await shopify.tagProcessed(order.id);
   console.log(`[OK ] ${ctx.orderName} ${ctx.returnName} -> shipmentNo ${label.shipmentNo}`);
   return 'ok';
