@@ -49,6 +49,20 @@ async function getRfo(returnGid){
   const d=await gql(`query($id:ID!){ return(id:$id){ reverseFulfillmentOrders(first:5){ nodes{ id reverseDeliveries(first:1){ nodes{ id } } lineItems(first:50){ nodes{ id totalQuantity } } } } } }`, { id:returnGid });
   return (d.return?.reverseFulfillmentOrders?.nodes||[])[0];
 }
+function toKg(v,u){ if(v==null) return null; u=(u||'').toUpperCase(); if(u==='GRAMS') return v/1000; if(u==='KILOGRAMS'||u==='KG') return v; if(u==='POUNDS') return v*0.453592; if(u==='OUNCES') return v*0.0283495; return v; }
+async function getCustomsItems(returnGid){
+  const d=await gql(`query($id:ID!){ return(id:$id){ returnLineItems(first:50){ nodes{ ... on ReturnLineItem {
+    quantity
+    fulfillmentLineItem{ lineItem{ title discountedUnitPriceSet{ shopMoney{ amount currencyCode } } variant{ weight weightUnit } } } } } } } }`, { id:returnGid });
+  const nodes=d.return?.returnLineItems?.nodes||[];
+  return nodes.map(n=>{
+    const li=n.fulfillmentLineItem?.lineItem||{};
+    const m=li.discountedUnitPriceSet?.shopMoney||{};
+    const kg=toKg(li.variant?.weight, li.variant?.weightUnit) || 0.5;
+    return { itemDescription:(li.title||'Returned item').slice(0,50), packagedQuantity:n.quantity,
+      itemWeight:{ uom:'kg', value:Number(kg.toFixed(3)) }, itemValue:{ currency:m.currencyCode||'EUR', value:Number(m.amount||0) } };
+  });
+}
 async function approveReturn(id){
   const d=await gql(`mutation($in:ReturnApproveRequestInput!){ returnApproveRequest(input:$in){ return{ id status } userErrors{ message } } }`,
     { in:{ id, notifyCustomer:false } });
@@ -74,4 +88,4 @@ async function createReverseDelivery(rfoId, lineItems, tracking, fileUrl, notify
 async function tagProcessed(orderId){
   await gql(`mutation($id:ID!,$t:[String!]!){ tagsAdd(id:$id, tags:$t){ userErrors{ message } } }`, { id:orderId, t:[PROCESSED_TAG] });
 }
-module.exports={ findCandidates, getRfo, approveReturn, uploadLabel, createReverseDelivery, tagProcessed };
+module.exports={ findCandidates, getRfo, getCustomsItems, approveReturn, uploadLabel, createReverseDelivery, tagProcessed };

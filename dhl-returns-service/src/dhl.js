@@ -18,9 +18,13 @@ async function createReturnOrder(ctx){
     shipmentReference: ctx.returnName,
     shipper:{ name1:ctx.shipper.name, addressStreet:ctx.shipper.street, addressHouse:ctx.shipper.house,
       postalCode:ctx.shipper.zip, city:ctx.shipper.city, email:ctx.shipper.email },
-    itemWeight:{ uom:'kg', value: ctx.weightKg || 1 },
-    itemValue:{ currency:'EUR', value: ctx.itemValue || 0 },
   };
+  if(ctx.customsItems && ctx.customsItems.length){
+    payload.customsDetails = { items: ctx.customsItems };   // Nicht-EU (CH/GB): Zollangaben
+  } else {
+    payload.itemWeight = { uom:'kg', value: ctx.weightKg || 1 };
+    payload.itemValue  = { currency:'EUR', value: ctx.itemValue || 0 };
+  }
   const res=await fetch(`${cfg.base}/parcel/de/shipping/returns/v1/orders?labelType=${encodeURIComponent(cfg.labelType)}`,{
     method:'POST', headers:{Authorization:`Bearer ${t}`,'Content-Type':'application/json'}, body:JSON.stringify(payload) });
   const txt=await res.text(); if(!res.ok) throw new Error(`DHL createReturnOrder ${res.status}: ${txt}`);

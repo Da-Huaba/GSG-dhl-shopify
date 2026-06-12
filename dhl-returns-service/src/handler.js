@@ -35,6 +35,9 @@ async function processReturn({ order, ret, rfo }){
   if(!rfoFresh){ await new Promise(r=>setTimeout(r,2500)); rfoFresh = await shopify.getRfo(ret.id); }
   if(!rfoFresh) throw new Error('keine reverseFulfillmentOrder (auch nach Genehmigung)');
   if((rfoFresh.reverseDeliveries?.nodes||[]).length>0){ console.log(`[SKIP] ${ctx.orderName}: bereits Reverse-Delivery vorhanden`); await shopify.tagProcessed(order.id); return 'skip'; }
+  if(cfg.customsCountries.includes(country)){
+    ctx.customsItems = await shopify.getCustomsItems(ret.id);
+  }
   const label=await dhl.createReturnOrder(ctx);
   const lineItems=(rfoFresh.lineItems?.nodes||[]).map(li=>({ reverseFulfillmentOrderLineItemId:li.id, quantity:li.totalQuantity }));
   const fileUrl=await shopify.uploadLabel(label.labelB64, `${ctx.returnName}.pdf`);

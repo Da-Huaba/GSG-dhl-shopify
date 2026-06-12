@@ -26,5 +26,6 @@ module.exports={
     user: req('DHL_GKP_USER'), password: req('DHL_GKP_PASSWORD'), labelType: opt('DHL_LABEL_TYPE','SHIPMENT_LABEL') },
   receiverIds,
   maxOrderAgeDays: parseInt(opt('MAX_ORDER_AGE_DAYS','60'),10),
-  blockedReasons: opt('BLOCKED_REASONS','OTHER').split(',').map(s=>s.trim().toUpperCase()).filter(Boolean),
+  blockedReasons: opt('BLOCKED_REASONS','').split(',').map(s=>s.trim().toUpperCase()).filter(Boolean),
+  customsCountries: opt('CUSTOMS_COUNTRIES','CH,GB').split(',').map(s=>s.trim().toUpperCase()).filter(Boolean),
 };
