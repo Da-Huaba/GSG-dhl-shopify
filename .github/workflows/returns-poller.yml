@@ -1,0 +1,29 @@
+name: DHL Returns Poller
+on:
+  schedule:
+    - cron: '*/30 * * * *'
+  workflow_dispatch: {}
+jobs:
+  poll:
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: dhl-returns-service } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '20' }
+      - run: node index.js
+        env:
+          MODE: ${{ vars.RETURNS_MODE || 'AUTO' }}
+          DRY_RUN: ${{ vars.RETURNS_DRY_RUN || 'true' }}
+          POLL_LOOKBACK_DAYS: '30'
+          SHOPIFY_SHOP: ${{ secrets.SHOPIFY_SHOP }}
+          SHOPIFY_ADMIN_TOKEN: ${{ secrets.SHOPIFY_ADMIN_TOKEN }}
+          DHL_BASE: ${{ vars.DHL_BASE || 'https://api-eu.dhl.com' }}
+          DHL_CLIENT_ID: ${{ secrets.DHL_RETURNS_CLIENT_ID }}
+          DHL_CLIENT_SECRET: ${{ secrets.DHL_RETURNS_CLIENT_SECRET }}
+          DHL_GKP_USER: ${{ secrets.DHL_GKP_USER }}
+          DHL_GKP_PASSWORD: ${{ secrets.DHL_GKP_PASSWORD }}
+          RECEIVER_IDS: ${{ secrets.DHL_RECEIVER_IDS }}
+          DHL_LABEL_TYPE: SHIPMENT_LABEL
+          ONLY_ORDERS: ${{ vars.RETURNS_ONLY_ORDERS || '' }}
+          MAX_ORDER_AGE_DAYS: '60'
