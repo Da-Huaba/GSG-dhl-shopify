@@ -49,18 +49,17 @@ async function getRfo(returnGid){
   const d=await gql(`query($id:ID!){ return(id:$id){ reverseFulfillmentOrders(first:5){ nodes{ id reverseDeliveries(first:1){ nodes{ id } } lineItems(first:50){ nodes{ id totalQuantity } } } } } }`, { id:returnGid });
   return (d.return?.reverseFulfillmentOrders?.nodes||[])[0];
 }
-function toKg(v,u){ if(v==null) return null; u=(u||'').toUpperCase(); if(u==='GRAMS') return v/1000; if(u==='KILOGRAMS'||u==='KG') return v; if(u==='POUNDS') return v*0.453592; if(u==='OUNCES') return v*0.0283495; return v; }
 async function getCustomsItems(returnGid){
+  const defKg = parseFloat(process.env.DEFAULT_ITEM_WEIGHT_KG || '0.5') || 0.5;
   const d=await gql(`query($id:ID!){ return(id:$id){ returnLineItems(first:50){ nodes{ ... on ReturnLineItem {
     quantity
-    fulfillmentLineItem{ lineItem{ title discountedUnitPriceSet{ shopMoney{ amount currencyCode } } variant{ weight weightUnit } } } } } } } }`, { id:returnGid });
+    fulfillmentLineItem{ lineItem{ title discountedUnitPriceSet{ shopMoney{ amount currencyCode } } } } } } } } }`, { id:returnGid });
   const nodes=d.return?.returnLineItems?.nodes||[];
   return nodes.map(n=>{
     const li=n.fulfillmentLineItem?.lineItem||{};
     const m=li.discountedUnitPriceSet?.shopMoney||{};
-    const kg=toKg(li.variant?.weight, li.variant?.weightUnit) || 0.5;
     return { itemDescription:(li.title||'Returned item').slice(0,50), packagedQuantity:n.quantity,
-      itemWeight:{ uom:'kg', value:Number(kg.toFixed(3)) }, itemValue:{ currency:m.currencyCode||'EUR', value:Number(m.amount||0) } };
+      itemWeight:{ uom:'kg', value:defKg }, itemValue:{ currency:m.currencyCode||'EUR', value:Number(m.amount||0) } };
   });
 }
 async function approveReturn(id){
