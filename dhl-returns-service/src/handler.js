@@ -3,9 +3,13 @@ const cfg=require('./config'); const dhl=require('./dhl'); const shopify=require
 // Straße + Hausnummer trennen (DHL erwartet addressStreet + addressHouse getrennt)
 function splitStreet(a1,a2){
   const s=(a1||'').trim();
-  const m=s.match(/^(.*?)[\s,]+(\d+\s*[a-zA-Z]?(?:[-\/]\d+\s*[a-zA-Z]?)?)$/);
+  // Hausnummer am Ende (DE/AT): "Hauptstr. 5", "Bgm.-Hailer-Str. 10b"
+  let m=s.match(/^(.*?\S)[\s,]+(\d+\s*[a-zA-Z]?(?:[-/]\d+\s*[a-zA-Z]?)?)$/);
   if(m) return { street:m[1].trim(), house:m[2].replace(/\s+/g,'') };
-  // Fallback: Hausnummer evtl. in Zeile 2
+  // Hausnummer am Anfang (FR/UK/IT/ES): "12 Rue de la Paix", "1165 rue Sully"
+  m=s.match(/^(\d+\s*[a-zA-Z]?(?:[-/]\d+\s*[a-zA-Z]?)?)[\s,]+(.+)$/);
+  if(m) return { street:m[2].trim(), house:m[1].replace(/\s+/g,'') };
+  // Fallback: Hausnummer in Zeile 2
   if(/^\d/.test((a2||'').trim())) return { street:s, house:(a2||'').trim() };
   return { street:s, house:'' };
 }
