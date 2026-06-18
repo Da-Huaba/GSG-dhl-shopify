@@ -2,6 +2,7 @@ name: DHL Tracking Sync
 on:
   schedule:
     - cron: '30 5 * * *'
+    - cron: '0 17 * * *' 
   workflow_dispatch: {}
 jobs:
   sync:
@@ -19,5 +20,5 @@ jobs:
           DHL_API_KEY: ${{ secrets.DHL_TRACKING_API_KEY }}
           DHL_TRACKING_BASE: https://api-eu.dhl.com
           LOOKBACK_DAYS: '10'
-          MAX_TRACK_CALLS: '240'
+          MAX_TRACK_CALLS: '2000'
           DRY_RUN: ${{ vars.TRACKING_DRY_RUN || 'true' }}
