@@ -16,9 +16,7 @@ jobs:
           MODE: ${{ vars.RETURNS_MODE || 'AUTO' }}
           DRY_RUN: ${{ vars.RETURNS_DRY_RUN || 'true' }}
           POLL_LOOKBACK_DAYS: '30'
-          SHOPIFY_SHOP: ${{ secrets.SHOPIFY_SHOP }}
-          SHOPIFY_CLIENT_ID: ${{ secrets.SHOPIFY_CLIENT_ID }}
-          SHOPIFY_CLIENT_SECRET: ${{ secrets.SHOPIFY_CLIENT_SECRET }}
+          SHOPIFY_STORES: ${{ secrets.SHOPIFY_STORES }}
           DHL_BASE: ${{ vars.DHL_BASE || 'https://api-eu.dhl.com' }}
           DHL_CLIENT_ID: ${{ secrets.DHL_RETURNS_CLIENT_ID }}
           DHL_CLIENT_SECRET: ${{ secrets.DHL_RETURNS_CLIENT_SECRET }}
@@ -26,5 +24,6 @@ jobs:
           DHL_GKP_PASSWORD: ${{ secrets.DHL_GKP_PASSWORD }}
           RECEIVER_IDS: ${{ secrets.DHL_RECEIVER_IDS }}
           DHL_LABEL_TYPE: SHIPMENT_LABEL
+          CUSTOMS_COUNTRIES: 'CH,GB'
           ONLY_ORDERS: ${{ vars.RETURNS_ONLY_ORDERS || '' }}
           MAX_ORDER_AGE_DAYS: '60'

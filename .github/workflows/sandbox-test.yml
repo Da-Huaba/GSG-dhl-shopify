@@ -13,7 +13,5 @@ jobs:
           DHL_BASE: ${{ vars.DHL_SANDBOX_BASE || 'https://api-sandbox.dhl.com' }}
           DHL_CLIENT_ID: ${{ secrets.DHL_RETURNS_CLIENT_ID }}
           DHL_CLIENT_SECRET: ${{ secrets.DHL_RETURNS_CLIENT_SECRET }}
-          DHL_USER: ${{ vars.DHL_SANDBOX_USER || 'user-valid' }}
-          DHL_PASSWORD: ${{ secrets.DHL_SANDBOX_PASSWORD || '' }}
           RECEIVER_ID: deu
           LABEL_TYPE: SHIPMENT_LABEL

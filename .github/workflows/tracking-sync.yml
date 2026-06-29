@@ -1,8 +1,8 @@
 name: DHL Tracking Sync
 on:
   schedule:
-    - cron: '30 5 * * *'
-    - cron: '0 17 * * *' 
+    - cron: '30 5 * * *'        # morgens ~07:30 CEST
+    - cron: '0 17 * * *'        # ~19:00 CEST, nach DHL-Abholung
   workflow_dispatch: {}
 jobs:
   sync:
@@ -14,11 +14,9 @@ jobs:
         with: { node-version: '20' }
       - run: node index.js
         env:
-          SHOPIFY_SHOP: ${{ secrets.SHOPIFY_SHOP }}
-          SHOPIFY_CLIENT_ID: ${{ secrets.SHOPIFY_CLIENT_ID }}
-          SHOPIFY_CLIENT_SECRET: ${{ secrets.SHOPIFY_CLIENT_SECRET }}
+          SHOPIFY_STORES: ${{ secrets.SHOPIFY_STORES }}
           DHL_API_KEY: ${{ secrets.DHL_TRACKING_API_KEY }}
           DHL_TRACKING_BASE: https://api-eu.dhl.com
           LOOKBACK_DAYS: '10'
-          MAX_TRACK_CALLS: '2000'
+          MAX_TRACK_CALLS: '2000'         # global über alle Stores
           DRY_RUN: ${{ vars.TRACKING_DRY_RUN || 'true' }}
