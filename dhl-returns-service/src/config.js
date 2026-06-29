@@ -1,29 +1,28 @@
 const fs=require('fs'), path=require('path');
-// Minimaler .env-Loader (keine Abhängigkeit): lädt .env aus dem Projektordner, falls vorhanden
 (function loadEnv(){
-  try{
-    const p=path.join(process.cwd(),'.env');
-    if(!fs.existsSync(p)) return;
-    for(const line of fs.readFileSync(p,'utf8').split(/\r?\n/)){
-      const m=line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*)\s*$/i);
-      if(m && process.env[m[1]]===undefined) process.env[m[1]]=m[2].replace(/^["']|["']$/g,'');
-    }
+  try{ const p=path.join(process.cwd(),'.env'); if(!fs.existsSync(p)) return;
+    for(const line of fs.readFileSync(p,'utf8').split(/\r?\n/)){ const m=line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*)\s*$/i); if(m && process.env[m[1]]===undefined) process.env[m[1]]=m[2].replace(/^["']|["']$/g,''); }
   }catch{}
 })();
 function req(n){ const v=process.env[n]; if(!v) throw new Error('Missing env var: '+n); return v; }
 function opt(n,d){ return process.env[n]!==undefined?process.env[n]:d; }
+function normShop(x){ return x.includes('.myshopify.com')?x:x+'.myshopify.com'; }
 let receiverIds={}; try{ receiverIds=JSON.parse(opt('RECEIVER_IDS','{}')); }catch{ throw new Error('RECEIVER_IDS ist kein gültiges JSON'); }
+function buildStores(){
+  const raw=process.env.SHOPIFY_STORES; let list;
+  if(raw){ try{ list=JSON.parse(raw); }catch{ throw new Error('SHOPIFY_STORES ist kein gültiges JSON'); } }
+  else { list=[{ key:'default', shop:req('SHOPIFY_SHOP'), clientId:req('SHOPIFY_CLIENT_ID'), clientSecret:req('SHOPIFY_CLIENT_SECRET') }]; }
+  return list.map(s=>{ if(!s.shop||!s.clientId||!s.clientSecret) throw new Error('Store-Eintrag braucht shop, clientId, clientSecret'); return { key:s.key||s.shop, shop:normShop(s.shop), clientId:s.clientId, clientSecret:s.clientSecret }; });
+}
 module.exports={
   mode: opt('MODE','AUTO').toUpperCase(),
   dryRun: String(opt('DRY_RUN','true')).toLowerCase()==='true',
   lookbackDays: parseInt(opt('POLL_LOOKBACK_DAYS','30'),10),
   maxPerRun: parseInt(opt('MAX_PER_RUN','50'),10),
   only: opt('ONLY_ORDERS','').split(',').map(x=>x.trim()).filter(Boolean),
-  shop: (function(x){return x.includes('.myshopify.com')?x:x+'.myshopify.com';})(req('SHOPIFY_SHOP')),
-  clientId: req('SHOPIFY_CLIENT_ID'), clientSecret: req('SHOPIFY_CLIENT_SECRET'), apiVersion: opt('SHOPIFY_API_VERSION','2025-07'),
-  dhl:{ base: opt('DHL_BASE','https://api-eu.dhl.com'),
-    clientId: req('DHL_CLIENT_ID'), clientSecret: req('DHL_CLIENT_SECRET'),
-    user: req('DHL_GKP_USER'), password: req('DHL_GKP_PASSWORD'), labelType: opt('DHL_LABEL_TYPE','SHIPMENT_LABEL') },
+  apiVersion: opt('SHOPIFY_API_VERSION','2025-07'),
+  stores: buildStores(),
+  dhl:{ base: opt('DHL_BASE','https://api-eu.dhl.com'), clientId: req('DHL_CLIENT_ID'), clientSecret: req('DHL_CLIENT_SECRET'), user: req('DHL_GKP_USER'), password: req('DHL_GKP_PASSWORD'), labelType: opt('DHL_LABEL_TYPE','SHIPMENT_LABEL') },
   receiverIds,
   maxOrderAgeDays: parseInt(opt('MAX_ORDER_AGE_DAYS','60'),10),
   blockedReasons: opt('BLOCKED_REASONS','').split(',').map(s=>s.trim().toUpperCase()).filter(Boolean),
